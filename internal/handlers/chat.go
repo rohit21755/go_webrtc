@@ -28,3 +28,7 @@ func RoomWebsocket(c *websocket.Conn) {
 	}
 	_, _, room := createOrGetRoom(uuid)
 }
+
+func createOrGetRoom(uuid string) (string, string, Room) {
+
+}
