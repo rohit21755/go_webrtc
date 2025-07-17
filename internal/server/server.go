@@ -2,13 +2,12 @@ package server
 
 import (
 	"flag"
-	"os"
-	"time"
-
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/template/html/v2"
 	"github.com/rohit21755/go_webrtc/internal/handlers"
+	w "github.com/rohit21755/go_webrtc/pkg/webrtc"
+	"os"
+	"time"
 )
 
 var (
@@ -17,13 +16,13 @@ var (
 	key  = flag.String("key", "", "")
 )
 
-func RUn() error {
+func Run() error {
 	flag.Parse()
 	app := fiber.New()
 	if *addr == ":" {
 		*addr = ":8000"
 	}
-	engine := html.New("./views", ".html")
+	// engine := html.New("./views", ".html")
 
 	app.Get("/", handlers.Welcome)
 	app.Get("/room/create", handlers.RoomCreate)
@@ -35,9 +34,27 @@ func RUn() error {
 	app.Get("/room/:uuid/chat/websocket", websocket.New(handlers.RoomChatWebsockets))
 	app.Get("/room/:uuid/viewer/websocket", websocket.New(handlers.RoomViewerWebsocket))
 	app.Get("/stream/:ssuid", handlers.Stream)
-	app.Get("/stream/:ssuid/websocket")
-	app.Get("/stream/:ssuid/chat/websocket")
-	app.Get("/stream/:ssuid/viewer/websocket")
+	app.Get("/stream/:ssuid/websocket", websocket.New(handlers.StreamWebsocket, websocket.Config{
+		HandshakeTimeout: 10 * time.Second,
+	}))
+	app.Get("/stream/:ssuid/chat/websocket", websocket.New(handlers.StreamChatWebsocket))
+	app.Get("/stream/:ssuid/viewer/websocket", websocket.New(handlers.StreamViewerWebsocket))
+	app.Static("/", "/assests")
 
-	app.Listen(*addr)
+	w.Rooms = make(map[string]*w.Room)
+	w.Streams = make(map[string]*w.Room)
+	if *cert != " " {
+		return app.ListerTLS(*addr, *cert, *key)
+	}
+	go func() {
+		for range time.NewTicker(time.Second * 3).C {
+			for _, room ;= range w.Rooms{
+				room.Peers.DispatchFrame()
+			}
+			
+		}
+
+	}()
+
+	return app.Listen(*addr)
 }
