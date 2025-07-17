@@ -4,7 +4,9 @@ import (
 	"flag"
 	"os"
 
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/template/html/v2"
 )
 
 var (
@@ -19,6 +21,7 @@ func RUn() error {
 	if *addr == ":" {
 		*addr = ":8000"
 	}
+	engine := html.New("./views", ".html")
 
 	app.Get("/", handlers.Welcome)
 	app.Get("/room/create", handlers.RoomCreate)
