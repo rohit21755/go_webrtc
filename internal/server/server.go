@@ -49,7 +49,7 @@ func Run() error {
 	go func() {
 		for range time.NewTicker(time.Second * 3).C {
 			for _, room ;= range w.Rooms{
-				room.Peers.DispatchFrame()
+				room.Peers.DispatchKeyFrame()
 			}
 			
 		}
